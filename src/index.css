@@ -1,10 +1,8 @@
 @import 'tailwindcss';
 
-
-
-@layer components {
+@layer utilities {
   .text-body {
-    @apply relative w-full h-screen flex items-center justify-center ;
+    @apply relative w-full h-screen flex items-center justify-center bg-black;
   }
 
   .framer {
@@ -14,5 +12,23 @@
   .transition {
     @apply w-full h-full bg-black;
   }
+}
+
+/* Add animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 1s ease-in forwards;
+}
+
+.splash-enter {
+  @apply transition-all duration-1000;
+}
+
+.splash-enter-active {
+  @apply opacity-0 translate-y-full;
 }
 
