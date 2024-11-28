@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+
+
+@layer components {
+  .text-body {
+    @apply relative w-full h-screen flex items-center justify-center ;
+  }
+
+  .framer {
+    @apply w-full h-screen;
+  }
+
+  .transition {
+    @apply w-full h-full bg-black;
+  }
+}
+
