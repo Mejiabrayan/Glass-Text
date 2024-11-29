@@ -1,4 +1,5 @@
-import { Suspense, useEffect, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import {
   Text3D,
@@ -11,8 +12,6 @@ import {
   PositionalAudio,
 } from '@react-three/drei';
 import { CenterProps } from '@react-three/drei/core/Center';
-import { SplashScreen } from './splash-screen';
-
 // Optimize transmission config
 interface TransmissionConfig {
   backside: boolean;
@@ -35,40 +34,50 @@ interface TextProps extends Partial<CenterProps> {
   font?: string;
   position?: [number, number, number];
   scale?: number | [number, number, number];
-  ready: boolean;
+  audioReady: boolean;
 }
 
 export default function GlassText(): JSX.Element {
-  const [showExperience, setShowExperience] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const audioInitialized = useRef(false);
+  const [audioReady, setAudioReady] = useState(false);
 
-  // Handle loading state
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
+    const handleInteraction = () => {
+      if (!audioInitialized.current) {
+        audioInitialized.current = true;
+        setAudioReady(true);
+      }
+    };
+
+    window.addEventListener('click', handleInteraction, { once: true });
+    window.addEventListener('touchstart', handleInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
   }, []);
 
-  if (!showExperience) {
-    return (
-      <SplashScreen 
-        onEnter={() => setShowExperience(true)}
-        isLoading={isLoading}
-      />
-    );
-  }
-
   return (
-    <div className="text-body">
-      <Suspense fallback={null}>
-        <div className="absolute inset-0 w-full h-full">
-          <CanvasScene ready={true} />
-        </div>
-      </Suspense>
+    <div className='text-body'>
+      <motion.div
+        className='framer'
+        initial={{ position: 'absolute', top: '0%' }}
+        animate={{ position: 'absolute', top: '-110' }}
+        exit={{ position: 'absolute', top: '0%' }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className='transition' />
+      </motion.div>
+
+      <div className='absolute inset-0 w-full h-full'>
+        <CanvasScene audioReady={audioReady} />
+      </div>
     </div>
   );
 }
 
-function CanvasScene({ ready }: { ready: boolean }): JSX.Element {
+function CanvasScene({ audioReady }: { audioReady: boolean }): JSX.Element {
   const isMobile = window.innerWidth < 768;
   
   const config: TransmissionConfig = {
@@ -114,7 +123,7 @@ function CanvasScene({ ready }: { ready: boolean }): JSX.Element {
           config={config} 
           position={[0, isMobile ? -1 : -1.5, 0]}
           scale={isMobile ? 0.8 : 1}
-          ready={ready}
+          audioReady={audioReady}
         >
           Intelligence
         </Text>
@@ -150,9 +159,9 @@ function Text({
   config,
   font = 'https://threejs.org/examples/fonts/helvetiker_regular.typeface.json',
   scale,
-  ready,
+  audioReady,
   ...props
-}: TextProps & { ready: boolean }): JSX.Element {
+}: TextProps): JSX.Element {
   const isMobile = window.innerWidth < 768;
 
   return (
@@ -186,12 +195,13 @@ function Text({
             metalness={0.1}
           />
         </Text3D>
-        {ready && (
+        {audioReady && (
           <PositionalAudio 
             url="/constellation.mp3"
             distance={10}
             loop
             autoplay
+            
           />
         )}
       </Center>
